@@ -445,16 +445,49 @@ export const getEntityRecords =
 			let records = [],
 				meta;
 			if ( entityConfig.supportsPagination && query.per_page !== -1 ) {
-				const response = await apiFetch( { path, parse: false } );
-				records = Object.values( await response.json() );
-				meta = {
-					totalItems: parseInt(
-						response.headers.get( 'X-WP-Total' )
-					),
-					totalPages: parseInt(
-						response.headers.get( 'X-WP-TotalPages' )
-					),
-				};
+				try {
+					const response = await apiFetch( { path, parse: false } );
+					records = Object.values( await response.json() );
+					meta = {
+						totalItems: parseInt(
+							response.headers.get( 'X-WP-Total' )
+						),
+						totalPages: parseInt(
+							response.headers.get( 'X-WP-TotalPages' )
+						),
+					};
+				} catch ( error ) {
+					// The posts REST controller returns an error when the requested
+					// page is past the last page. Recover total counts from page 1
+					// so consumers (e.g. DataViews) can still show pagination.
+					let errorCode = error?.code;
+					if (
+						! errorCode &&
+						typeof error?.clone === 'function'
+					) {
+						try {
+							errorCode = ( await error.clone().json() )?.code;
+						} catch {
+							// Ignore parse errors and keep the original failure path.
+						}
+					}
+					if ( errorCode !== 'rest_post_invalid_page_number' ) {
+						throw error;
+					}
+					const response = await apiFetch( {
+						path: addQueryArgs( path, { page: 1 } ),
+						parse: false,
+					} );
+					records = [];
+					meta = {
+						totalItems: parseInt(
+							response.headers.get( 'X-WP-Total' )
+						),
+						totalPages: parseInt(
+							response.headers.get( 'X-WP-TotalPages' )
+						),
+					};
+				}
 			} else if (
 				query.per_page === -1 &&
 				query[ RECEIVE_INTERMEDIATE_RESULTS ] === true

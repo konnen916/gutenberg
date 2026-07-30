@@ -177,8 +177,29 @@ jest.mock( '@wordpress/compose', () => {
 
 describe( 'DataViews component', () => {
 	it( 'should show "No results" if data is empty', () => {
-		render( <DataViewWrapper data={ [] } /> );
+		render(
+			<DataViewWrapper
+				data={ [] }
+				paginationInfo={ { totalItems: 0, totalPages: 0 } }
+			/>
+		);
 		expect( screen.getByText( 'No results' ) ).toBeInTheDocument();
+	} );
+
+	it( 'should show "No results on this page" when the page is out of bounds', () => {
+		render(
+			<DataViewWrapper
+				data={ [] }
+				view={ { ...DEFAULT_VIEW, page: 5, perPage: 1 } }
+				paginationInfo={ { totalItems: 3, totalPages: 3 } }
+			/>
+		);
+		expect(
+			screen.getByText( 'No results on this page' )
+		).toBeInTheDocument();
+		expect(
+			screen.getByRole( 'combobox', { name: 'Current page' } )
+		).toBeInTheDocument();
 	} );
 
 	it( 'should filter results by "search" text, if field has enableGlobalSearch set to true', async () => {

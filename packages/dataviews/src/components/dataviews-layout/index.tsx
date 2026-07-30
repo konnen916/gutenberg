@@ -22,6 +22,27 @@ type DataViewsLayoutProps = {
 	className?: string;
 };
 
+function getDefaultEmpty( {
+	page,
+	totalItems,
+	totalPages,
+}: {
+	page?: number;
+	totalItems: number;
+	totalPages: number;
+} ) {
+	const isOutOfBoundsPage =
+		totalItems > 0 && ( page ?? 1 ) > totalPages && totalPages > 0;
+
+	return (
+		<p>
+			{ isOutOfBoundsPage
+				? __( 'No results on this page' )
+				: __( 'No results' ) }
+		</p>
+	);
+}
+
 export default function DataViewsLayout( { className }: DataViewsLayoutProps ) {
 	const {
 		actions = [],
@@ -41,8 +62,17 @@ export default function DataViewsLayout( { className }: DataViewsLayoutProps ) {
 		renderItemLink,
 		defaultLayouts,
 		containerRef,
-		empty = <p>{ __( 'No results' ) }</p>,
+		paginationInfo,
+		empty,
 	} = useContext( DataViewsContext );
+
+	const resolvedEmpty =
+		empty ??
+		getDefaultEmpty( {
+			page: view.page,
+			totalItems: paginationInfo.totalItems,
+			totalPages: paginationInfo.totalPages,
+		} );
 
 	const isDelayedInitialLoading = useDelayedLoading( ! hasInitiallyLoaded, {
 		delay: 200,
@@ -87,7 +117,7 @@ export default function DataViewsLayout( { className }: DataViewsLayoutProps ) {
 				renderItemLink={ renderItemLink }
 				isItemClickable={ isItemClickable }
 				view={ view }
-				empty={ empty }
+				empty={ resolvedEmpty }
 			/>
 		</div>
 	);

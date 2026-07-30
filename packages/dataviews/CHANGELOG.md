@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Bug Fix
+
+-   DataViews: Clarify the empty state when the current page is out of bounds ("No results on this page") and keep the page switcher available so users can navigate back to a valid page. [#80840](https://github.com/WordPress/gutenberg/issues/80840)
+
 ### Enhancements
 
 -   DataViews: Add Shift+Click range selection through a shared `useSelectionProps` hook that layouts can adopt, wired up in the table and grid layouts.[#80046](https://github.com/WordPress/gutenberg/pull/80046)

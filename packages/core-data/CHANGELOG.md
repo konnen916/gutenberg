@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Bug Fix
+
+-   `getEntityRecords`: When the REST API rejects an out-of-bounds page (`rest_post_invalid_page_number`), recover total item/page counts from page 1 and return an empty result set so paginated UIs can still show navigation. [#80840](https://github.com/WordPress/gutenberg/issues/80840)
+
 ### Internal
 
 -   Update `memize` to 2.1.1 ([#80764](https://github.com/WordPress/gutenberg/pull/80764)).

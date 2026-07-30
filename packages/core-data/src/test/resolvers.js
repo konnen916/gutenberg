@@ -891,6 +891,69 @@ describe( 'getEntityRecords', () => {
 			expect.objectContaining( { totalItems: 5, totalPages: 1 } )
 		);
 	} );
+
+	it( 'recovers pagination metadata when the requested page is out of bounds', async () => {
+		const dispatch = Object.assign( jest.fn(), {
+			receiveEntityRecords: jest.fn(),
+			__unstableAcquireStoreLock: jest.fn(),
+			__unstableReleaseStoreLock: jest.fn(),
+			finishResolutions: jest.fn(),
+		} );
+		const paginatedResolveSelect = {
+			getEntitiesConfig: jest.fn( () => [
+				{
+					name: 'post',
+					kind: 'postType',
+					baseURL: '/wp/v2/posts',
+					baseURLParams: { context: 'edit' },
+					supportsPagination: true,
+				},
+			] ),
+		};
+
+		triggerFetch
+			.mockRejectedValueOnce( {
+				clone: () => ( {
+					json: () =>
+						Promise.resolve( {
+							code: 'rest_post_invalid_page_number',
+							message:
+								'The page number requested is larger than the number of pages available.',
+							data: { status: 400 },
+						} ),
+				} ),
+			} )
+			.mockResolvedValueOnce( {
+				json: () => Promise.resolve( [ { id: 1 } ] ),
+				headers: new Map( [
+					[ 'X-WP-Total', '9' ],
+					[ 'X-WP-TotalPages', '3' ],
+				] ),
+			} );
+
+		await getEntityRecords( 'postType', 'post', {
+			per_page: 3,
+			page: 5,
+		} )( { dispatch, registry, resolveSelect: paginatedResolveSelect } );
+
+		expect( triggerFetch ).toHaveBeenNthCalledWith( 1, {
+			path: '/wp/v2/posts?context=edit&per_page=3&page=5',
+			parse: false,
+		} );
+		expect( triggerFetch ).toHaveBeenNthCalledWith( 2, {
+			path: '/wp/v2/posts?context=edit&per_page=3&page=1',
+			parse: false,
+		} );
+		expect( dispatch.receiveEntityRecords ).toHaveBeenCalledWith(
+			'postType',
+			'post',
+			[],
+			{ per_page: 3, page: 5 },
+			false,
+			undefined,
+			{ totalItems: 9, totalPages: 3 }
+		);
+	} );
 } );
 
 describe( 'taxonomy pagination', () => {
