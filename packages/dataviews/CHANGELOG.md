@@ -4,7 +4,7 @@
 
 ### Bug Fix
 
--   DataViews: Clarify the empty state when the current page is out of bounds ("No results on this page") and keep the page switcher available so users can navigate back to a valid page. [#80840](https://github.com/WordPress/gutenberg/issues/80840)
+-   DataViews: Clarify the empty state when the current page is out of bounds ("No results on this page") and keep the page switcher available so users can navigate back to a valid page. [#80982](https://github.com/WordPress/gutenberg/pull/80982)
 
 ### Enhancements
 
