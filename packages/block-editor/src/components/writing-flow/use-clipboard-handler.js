@@ -14,6 +14,8 @@ import {
 } from '@wordpress/dom';
 import { useDispatch, useRegistry, useSelect } from '@wordpress/data';
 import { useRefEffect } from '@wordpress/compose';
+import { __ } from '@wordpress/i18n';
+import { store as noticesStore } from '@wordpress/notices';
 
 /**
  * Internal dependencies
@@ -236,6 +238,15 @@ export default function useClipboardHandler() {
 								: [ block ];
 
 						if ( ! switchedBlocks ) {
+							registry
+								.dispatch( noticesStore )
+								.createWarningNotice(
+									__(
+										'The copied blocks cannot be pasted here.'
+									),
+									{ type: 'snackbar' }
+								);
+							event.preventDefault();
 							return;
 						}
 
