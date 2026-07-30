@@ -461,10 +461,7 @@ export const getEntityRecords =
 					// page is past the last page. Recover total counts from page 1
 					// so consumers (e.g. DataViews) can still show pagination.
 					let errorCode = error?.code;
-					if (
-						! errorCode &&
-						typeof error?.clone === 'function'
-					) {
+					if ( ! errorCode && typeof error?.clone === 'function' ) {
 						try {
 							errorCode = ( await error.clone().json() )?.code;
 						} catch {
