@@ -50,7 +50,7 @@ jobs:
                           - '!{phpcs,phpunit}*'
                           - '!{changelog,readme}.txt'
                           - '!.{editorconfig,gitignore,prettierrc*,stylelintrc*}'
-                          - '!.github/{*,!(workflows|setup-node)/**,workflows/!(end2end-test.yml)}'
+                          - '!.github/{*,!(workflows|setup-node|setup-playwright)/**,workflows/!(end2end-test.yml)}'
 
     e2e-playwright:
         name: Playwright - ${{ matrix.part }}
