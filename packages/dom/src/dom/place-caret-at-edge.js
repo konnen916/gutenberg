@@ -48,7 +48,21 @@ export default function placeCaretAtEdge( container, isReverse, x ) {
 		return;
 	}
 
-	container.focus();
+	// An element explicitly marked editable by inheritance
+	// (contenteditable="inherit") is editable through an editing host
+	// ancestor (e.g. an editable canvas wrapper) and cannot hold focus
+	// itself. Place the range within it first, below, and then focus the
+	// editing host, which adopts the selection placed within it. The order
+	// matters: focusing an editing host without a selection makes Safari
+	// asynchronously reveal a caret, scrolling the viewport.
+	const isInheritedEditable =
+		container.nodeType === container.ELEMENT_NODE &&
+		container.getAttribute( 'contenteditable' ) === 'inherit' &&
+		container.isContentEditable;
+
+	if ( ! isInheritedEditable ) {
+		container.focus();
+	}
 
 	if ( isInputOrTextArea( container ) ) {
 		// The element may not support selection setting.
@@ -67,11 +81,10 @@ export default function placeCaretAtEdge( container, isReverse, x ) {
 		return;
 	}
 
-	// Only place a caret if the container is itself an editable element.
-	// It may also be content editable by inheriting it from an editing
-	// host ancestor (e.g. an editable canvas wrapper), but placing a caret
-	// for e.g. a focusable block element is then not intended.
-	if ( container.contentEditable !== 'true' ) {
+	// Only place a caret if the container is an editable element: an editing
+	// host, or explicitly marked editable by inheritance. A merely focusable
+	// element (e.g. a block wrapper) is not a caret target.
+	if ( container.contentEditable !== 'true' && ! isInheritedEditable ) {
 		return;
 	}
 
@@ -90,4 +103,8 @@ export default function placeCaretAtEdge( container, isReverse, x ) {
 	assertIsDefined( selection, 'selection' );
 	selection.removeAllRanges();
 	selection.addRange( range );
+
+	if ( isInheritedEditable ) {
+		container.closest( '[contenteditable="true"]' )?.focus();
+	}
 }
