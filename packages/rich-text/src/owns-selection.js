@@ -24,11 +24,12 @@ export function ownsSelection( element ) {
 	// equivalent for it. The element itself may be editable by inheritance
 	// (`contenteditable="inherit"` under the editing host, so it is not a
 	// focusable editing area of its own); since the focused editing host must
-	// contain it, it is editable unless it explicitly opted out.
+	// contain it, the inherited state counts as editable too.
 	if (
 		! activeElement ||
 		activeElement.contentEditable !== 'true' ||
-		element.contentEditable === 'false' ||
+		( element.contentEditable !== 'true' &&
+			element.contentEditable !== 'inherit' ) ||
 		! activeElement.contains( element )
 	) {
 		return false;
