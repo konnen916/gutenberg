@@ -105,6 +105,9 @@ export default function placeCaretAtEdge( container, isReverse, x ) {
 	selection.addRange( range );
 
 	if ( isInheritedEditable ) {
-		container.closest( '[contenteditable="true"]' )?.focus();
+		const host = /** @type {HTMLElement|null} */ (
+			container.closest( '[contenteditable="true"]' )
+		);
+		host?.focus();
 	}
 }
