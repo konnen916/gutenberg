@@ -122,10 +122,53 @@ export default function useSelectionObserver() {
 			const { ownerDocument } = node;
 			const { defaultView } = ownerDocument;
 
+			// DEBUG (remove): beacon selection state of BOTH documents (canvas
+			// iframe and top) to the local log server.
+			const __desc = ( n ) =>
+				! n
+					? '-'
+					: n.nodeName +
+					  ( n.nodeType === 3
+							? '"' + n.textContent.slice( 0, 10 ) + '"'
+							: '' );
+			const __dbg = ( tag ) => {
+				try {
+					const s = defaultView.getSelection();
+					const ae = ownerDocument.activeElement;
+					let line = `${ tag } IFR[col=${
+						s.isCollapsed ? 1 : 0
+					} a=${ __desc( s.anchorNode ) } ae=${
+						ae ? ae.nodeName + ( ae === node ? '(WRAP)' : '' ) : '-'
+					}]`;
+					const topWin = defaultView.parent;
+					if ( topWin && topWin !== defaultView ) {
+						const ts = topWin.getSelection();
+						const tae = topWin.document.activeElement;
+						line += ` TOP[col=${ ts.isCollapsed ? 1 : 0 } a=${ __desc(
+							ts.anchorNode
+						) } ae=${ tae ? tae.nodeName : '-' }]`;
+					}
+					defaultView.navigator.sendBeacon(
+						'http://localhost:8899/log',
+						line
+					);
+				} catch ( e ) {}
+			};
+			// DEBUG (remove): watch the top document's selection too.
+			try {
+				if ( defaultView.parent !== defaultView ) {
+					defaultView.parent.document.addEventListener(
+						'selectionchange',
+						() => __dbg( 'TOPSC' )
+					);
+				}
+			} catch ( e ) {}
+
 			let isTripleClick = false;
 
 			function onMouseDown( event ) {
 				isTripleClick = event.detail === 3;
+				__dbg( 'mousedown/d' + event.detail );
 				// A shift+click makes a multi-selection: mark the gesture as
 				// in progress so the clicked block's focus handler does not
 				// select it (collapsing the native range being made), and so
@@ -142,6 +185,8 @@ export default function useSelectionObserver() {
 
 			function onSelectionChange( event ) {
 				const selection = defaultView.getSelection();
+
+				__dbg( 'sc:' + event.type );
 
 				if ( ! selection.rangeCount ) {
 					return;
