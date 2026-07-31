@@ -129,8 +129,10 @@ export default ( props ) => ( element ) => {
 
 		// Check if the implementor disabled editing. `contentEditable` does
 		// disable input, but not text selection, so we must ignore selection
-		// changes.
-		if ( element.contentEditable !== 'true' ) {
+		// changes. The element may be editable by inheritance from the editing
+		// host (`contenteditable="inherit"`), so only an explicit opt-out
+		// disables it.
+		if ( element.contentEditable === 'false' ) {
 			return;
 		}
 
