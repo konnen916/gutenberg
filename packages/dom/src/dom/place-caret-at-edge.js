@@ -88,9 +88,22 @@ export default function placeCaretAtEdge( container, isReverse, x ) {
 		return;
 	}
 
-	const range = scrollIfNoRange( container, isReverse, () =>
-		getRange( container, isReverse, x )
-	);
+	let range;
+
+	if ( isInheritedEditable && x === undefined ) {
+		// Point-based caret lookup is unreliable for an element that is not
+		// an editing host of its own: an empty paragraph under the editing
+		// host hit-tests to a neighbour, and scrollIfNoRange scrolls the
+		// viewport as a result. The horizontal edge needs no point; build
+		// the range directly.
+		range = container.ownerDocument.createRange();
+		range.selectNodeContents( container );
+		range.collapse( ! isReverse );
+	} else {
+		range = scrollIfNoRange( container, isReverse, () =>
+			getRange( container, isReverse, x )
+		);
+	}
 
 	if ( ! range ) {
 		return;
@@ -108,6 +121,9 @@ export default function placeCaretAtEdge( container, isReverse, x ) {
 		const host = /** @type {HTMLElement|null} */ (
 			container.closest( '[contenteditable="true"]' )
 		);
-		host?.focus();
+		// Without preventScroll, focusing the editing host (e.g. the canvas
+		// body) nudges the scroll position; the placed caret, not the host,
+		// determines what should be revealed.
+		host?.focus( { preventScroll: true } );
 	}
 }
