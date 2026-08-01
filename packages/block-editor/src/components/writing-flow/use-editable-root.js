@@ -11,6 +11,7 @@ import { store as blockEditorStore } from '../../store';
 import {
 	setContentEditableWrapper,
 	getRecentClickPoint,
+	getRecentFocusLoss,
 	caretRangeFromPoint,
 } from './utils';
 import { getBlockClientId, getSelectionEditableElement } from '../../utils/dom';
@@ -77,7 +78,13 @@ export default function useEditableRoot() {
 			} else if (
 				activeElement === node &&
 				node.ownerDocument.hasFocus() &&
-				! node.matches( ':focus' )
+				! node.matches( ':focus' ) &&
+				// Only when an element of the selected block recently lost
+				// focus with nowhere to go (dropped by the flip to inert):
+				// the same activeElement state also describes a canvas that
+				// was never focused, e.g. after a click on its padding.
+				getBlockClientId( getRecentFocusLoss( node ) ) ===
+					getSelectedBlockClientId()
 			) {
 				// Focus must genuinely be within the document: the wrapper is
 				// also the default activeElement while the user works in the

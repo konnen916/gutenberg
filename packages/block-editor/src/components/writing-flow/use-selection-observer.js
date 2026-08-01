@@ -14,7 +14,11 @@ import { isSelectionForward } from '@wordpress/dom';
  */
 import { store as blockEditorStore } from '../../store';
 import { getBlockClientId } from '../../utils/dom';
-import { setContentEditableWrapper } from './utils';
+import {
+	setContentEditableWrapper,
+	setLastFocusLoss,
+	getRecentFocusLoss,
+} from './utils';
 import { unlock } from '../../lock-unlock';
 
 const { ownsSelection } = unlock( richTextPrivateApis );
@@ -136,6 +140,10 @@ export default function useSelectionObserver() {
 				}
 			}
 
+			function onFocusOut( event ) {
+				setLastFocusLoss( node, event );
+			}
+
 			function onKeyDown() {
 				isTripleClick = false;
 			}
@@ -214,7 +222,9 @@ export default function useSelectionObserver() {
 							// here, so reclaim focus for the host.
 							activeElement === node &&
 							ownerDocument.hasFocus() &&
-							! node.matches( ':focus' )
+							! node.matches( ':focus' ) &&
+							getBlockClientId( getRecentFocusLoss( node ) ) ===
+								collapsedClientId
 						) {
 							node.focus( { preventScroll: true } );
 						}
@@ -480,6 +490,7 @@ export default function useSelectionObserver() {
 			defaultView.addEventListener( 'mouseup', onMouseUp );
 			node.addEventListener( 'mousedown', onMouseDown );
 			node.addEventListener( 'keydown', onKeyDown );
+			node.addEventListener( 'focusout', onFocusOut );
 			ownerDocument.addEventListener(
 				'copy',
 				ensureMultiBlockSelectionSync,
@@ -503,6 +514,7 @@ export default function useSelectionObserver() {
 				defaultView.removeEventListener( 'mouseup', onMouseUp );
 				node.removeEventListener( 'mousedown', onMouseDown );
 				node.removeEventListener( 'keydown', onKeyDown );
+				node.removeEventListener( 'focusout', onFocusOut );
 				ownerDocument.removeEventListener(
 					'copy',
 					ensureMultiBlockSelectionSync,

@@ -240,3 +240,37 @@ export function caretRangeFromPoint( ownerDocument, x, y ) {
 	range.collapse( true );
 	return range;
 }
+
+const lastFocusLosses = new WeakMap();
+
+/**
+ * Records that an element within the wrapper lost focus without focus moving
+ * anywhere (no related target): the signature of the browser dropping focus
+ * because the element turned into an inert part of the editing host. The
+ * rescue paths in `useEditableRoot` and the selection observer only reclaim
+ * focus for the host when this happened; the wrapper being the default
+ * activeElement without :focus also describes a canvas that was never
+ * focused (e.g. a click on the canvas padding), which must be left alone.
+ *
+ * @param {HTMLElement} node  Wrapper element.
+ * @param {FocusEvent}  event Focusout event.
+ */
+export function setLastFocusLoss( node, event ) {
+	if ( event.relatedTarget ) {
+		lastFocusLosses.delete( node );
+		return;
+	}
+	lastFocusLosses.set( node, { element: event.target, time: Date.now() } );
+}
+
+/**
+ * Returns the element that recently lost focus with nowhere to go, if any.
+ *
+ * @param {HTMLElement} node Wrapper element.
+ *
+ * @return {?HTMLElement} The element, or null.
+ */
+export function getRecentFocusLoss( node ) {
+	const loss = lastFocusLosses.get( node );
+	return loss && Date.now() - loss.time < 1000 ? loss.element : null;
+}

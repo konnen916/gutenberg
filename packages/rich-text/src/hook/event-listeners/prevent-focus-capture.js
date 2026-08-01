@@ -41,7 +41,14 @@ export function preventFocusCapture() {
 
 		function onPointerUp() {
 			if ( value !== null ) {
-				element.setAttribute( 'contenteditable', value );
+				// Only restore when the attribute is still what onPointerDown
+				// set: a render in between (e.g. the block was deselected by
+				// the click, changing the editable between an editing host
+				// and an inert part of one) owns the attribute now, and the
+				// stored value is stale.
+				if ( element.getAttribute( 'contenteditable' ) === 'false' ) {
+					element.setAttribute( 'contenteditable', value );
+				}
 				value = null;
 			}
 		}
