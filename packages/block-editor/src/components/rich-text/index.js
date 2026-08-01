@@ -15,6 +15,7 @@ import {
 	useMemo,
 	forwardRef,
 	useContext,
+	useSyncExternalStore,
 } from '@wordpress/element';
 import { useDispatch, useRegistry, useSelect } from '@wordpress/data';
 import { useMergeRefs, useInstanceId } from '@wordpress/compose';
@@ -44,6 +45,10 @@ import { Content, valueToHTMLString } from './content';
 import { withDeprecations } from './with-deprecations';
 import BlockContext from '../block-context';
 import { unlock } from '../../lock-unlock';
+import {
+	subscribePointerGesture,
+	isPointerGestureActive,
+} from './pointer-gesture';
 
 // `RichTextShortcut` and `RichTextInputEvent` now live in
 // `@wordpress/rich-text` so they share the shortcut and input-event contexts
@@ -443,8 +448,19 @@ export function RichTextWrapper(
 	// supports `editableRoot`), nested editable elements are no longer
 	// focusable areas on their own, so an explicit tabIndex restores their
 	// focusability.
+	// While a pointer gesture is active, keep the editable as it is: turning
+	// it into an inert part of the editing host mutates the DOM under the
+	// pointer and browsers abandon native selection gestures (a selection
+	// drag, the expansion of a double or triple click). The flip happens on
+	// pointer up; keyboard driven selection changes flip immediately.
+	const pointerGestureActive = useSyncExternalStore(
+		subscribePointerGesture,
+		isPointerGestureActive
+	);
+	const isInertEditingHostChild = isEditingHost && ! pointerGestureActive;
+
 	let tabIndex = props.tabIndex;
-	if ( isEditingHost ) {
+	if ( isInertEditingHostChild ) {
 		// Do NOT make the child a focusable editing area under the host. iOS
 		// focuses a focusable child on tap, thrashing focus with the host and
 		// canceling native selection gestures (double-tap to select a word).
@@ -537,7 +553,7 @@ export function RichTextWrapper(
 					// Under the editing host the child is editable by
 					// inheritance, not a nested editing host of its own, so iOS
 					// keeps focus on the host and native word selection works.
-					isEditingHost ? 'inherit' : ! shouldDisableEditing
+					isInertEditingHostChild ? 'inherit' : ! shouldDisableEditing
 				}
 				suppressContentEditableWarning
 				className={ clsx(

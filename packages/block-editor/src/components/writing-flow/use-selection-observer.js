@@ -14,6 +14,7 @@ import { isSelectionForward } from '@wordpress/dom';
  */
 import { store as blockEditorStore } from '../../store';
 import { getBlockClientId } from '../../utils/dom';
+import { setPointerGestureActive } from '../rich-text/pointer-gesture';
 import {
 	setContentEditableWrapper,
 	setLastFocusLoss,
@@ -138,6 +139,14 @@ export default function useSelectionObserver() {
 				if ( event.shiftKey ) {
 					startMultiSelect();
 				}
+			}
+
+			function onPointerDown() {
+				setPointerGestureActive( true );
+			}
+
+			function onPointerUp() {
+				setPointerGestureActive( false );
 			}
 
 			function onFocusOut( event ) {
@@ -491,6 +500,9 @@ export default function useSelectionObserver() {
 			node.addEventListener( 'mousedown', onMouseDown );
 			node.addEventListener( 'keydown', onKeyDown );
 			node.addEventListener( 'focusout', onFocusOut );
+			node.addEventListener( 'pointerdown', onPointerDown );
+			defaultView.addEventListener( 'pointerup', onPointerUp );
+			defaultView.addEventListener( 'pointercancel', onPointerUp );
 			ownerDocument.addEventListener(
 				'copy',
 				ensureMultiBlockSelectionSync,
@@ -515,6 +527,9 @@ export default function useSelectionObserver() {
 				node.removeEventListener( 'mousedown', onMouseDown );
 				node.removeEventListener( 'keydown', onKeyDown );
 				node.removeEventListener( 'focusout', onFocusOut );
+				node.removeEventListener( 'pointerdown', onPointerDown );
+				defaultView.removeEventListener( 'pointerup', onPointerUp );
+				defaultView.removeEventListener( 'pointercancel', onPointerUp );
 				ownerDocument.removeEventListener(
 					'copy',
 					ensureMultiBlockSelectionSync,
