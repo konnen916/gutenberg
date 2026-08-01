@@ -443,24 +443,16 @@ export function RichTextWrapper(
 	// supports `editableRoot`), nested editable elements are no longer
 	// focusable areas on their own, so an explicit tabIndex restores their
 	// focusability.
-	// On coarse pointer (touch) devices, the child must not be a focusable
-	// editing area under the host: iOS focuses a focusable child on tap,
-	// thrashing focus with the host mid-gesture and canceling native
-	// selection gestures (double tap to select a word). The child is then
-	// editable by inheritance (contentEditable="inherit" below), not on its
-	// own. Fine pointer devices keep the focusable child, which the desktop
-	// keyboard and selection flows are built around.
-	const isInertEditingHostChild =
-		isEditingHost &&
-		typeof window !== 'undefined' &&
-		window.matchMedia( '(pointer: coarse)' ).matches;
-
 	let tabIndex = props.tabIndex;
-	if ( isInertEditingHostChild ) {
-		// Block props pass tabIndex 0, so it must be explicitly removed.
+	if ( isEditingHost ) {
+		// Do NOT make the child a focusable editing area under the host. iOS
+		// focuses a focusable child on tap, thrashing focus with the host and
+		// canceling native selection gestures (double-tap to select a word).
+		// Focus must stay on the host, which owns editing for the whole canvas;
+		// the child is editable by inheritance (contentEditable="inherit"
+		// below), not on its own. Block props pass tabIndex 0, so it must be
+		// explicitly removed here.
 		tabIndex = null;
-	} else if ( isEditingHost ) {
-		tabIndex = props.tabIndex ?? 0;
 	} else if ( ! shouldDisableEditing && props.tabIndex === 0 ) {
 		tabIndex = null;
 	}
@@ -545,7 +537,7 @@ export function RichTextWrapper(
 					// Under the editing host the child is editable by
 					// inheritance, not a nested editing host of its own, so iOS
 					// keeps focus on the host and native word selection works.
-					isInertEditingHostChild ? 'inherit' : ! shouldDisableEditing
+					isEditingHost ? 'inherit' : ! shouldDisableEditing
 				}
 				suppressContentEditableWarning
 				className={ clsx(
