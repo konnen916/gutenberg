@@ -63,11 +63,10 @@ export async function getFocusOwnerLabel( this: Editor ) {
 				anchorNode.nodeType === anchorNode.ELEMENT_NODE
 					? ( anchorNode as HTMLElement )
 					: anchorNode.parentElement
-			)?.closest< HTMLElement >(
-				'[contenteditable]:not([contenteditable="false"])'
-			);
+			)?.closest< HTMLElement >( '[contenteditable], .rich-text' );
 			if (
 				editable &&
+				editable.isContentEditable &&
 				editable !== activeElement &&
 				focusNode &&
 				editable.contains( focusNode )

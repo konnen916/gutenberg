@@ -70,8 +70,11 @@ export function useFocusFirstElement( { clientId, initialPosition } ) {
 		// focuses the editing host.
 		if ( ! textInputs.length ) {
 			textInputs = Array.from(
-				ref.current.querySelectorAll( '[contenteditable="inherit"]' )
-			).filter( ( node ) => node.isContentEditable );
+				ref.current.querySelectorAll( '.rich-text' )
+			).filter(
+				( node ) =>
+					node.isContentEditable && node.contentEditable !== 'true'
+			);
 		}
 
 		// If reversed (e.g. merge via backspace), use the last in the set of
