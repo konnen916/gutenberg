@@ -1,0 +1,1 @@
+import{r,j as o}from"./iframe-BxVSJdpt.js";import{S as i}from"./index-CpXc_sh-.js";var s=r.forwardRef(function Icon2({icon:r,size:s=24,...e},a){return o.jsx(i,{ref:a,...r.props,...e,width:s,height:s})});export{s as I};

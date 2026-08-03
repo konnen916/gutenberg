@@ -1,0 +1,1 @@
+import{r,j as a,c as o}from"./iframe-BxVSJdpt.js";var s=r.forwardRef(function UnforwardedColorIndicator(r,s){const{className:c,colorValue:e,...n}=r;return a.jsx("span",{className:o("component-color-indicator",c),style:{background:e},ref:s,...n})});s.displayName="ColorIndicator";var c=s;export{c};
